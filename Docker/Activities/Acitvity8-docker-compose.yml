@@ -1,0 +1,42 @@
+#Postgres Database
+services:
+  postgres: 
+    image: postgres
+    environment: 
+      - POSTGRES_PASSWORD=postgres_password
+#Redis Database
+  redis:
+    image: redis
+    command: ["redis-server", "--protected-mode", "no"]
+#Express API server  
+  api:
+    build: ./server
+    image: docker.io/sreevara/complex-api
+    environment:
+        - REDIS_HOST=redis
+        - REDIS_PORT=6379
+        - PGUSER=postgres
+        - PGHOST=postgres
+        - PGDATABASE=postgres
+        - PGPASSWORD=postgres_password
+        - PGPORT=5432
+#React client
+  client:
+    build: /client
+    image: docker.io/sreevara/complex-client
+#Worker service
+  worker:
+    build: ./worker
+    image: docker.io/sreevara/complex-worker
+    environment:
+        - REDIS_HOST=redis
+        - REDIS_PORT=6379
+#Nginx Service
+  nginx:
+        depends_on:
+            - api
+            - client
+        restart: always
+        build: ./nginx
+        ports:
+            - '8083:80'
